@@ -39,6 +39,5 @@ public class DiscordBotService : BackgroundService, IDiscordBotService
             msg += " " + msgLine.ToString();
         }
         Console.WriteLine(msg);
-    }
-    
+    } 
 }
