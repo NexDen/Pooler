@@ -12,7 +12,7 @@ public class DiscordBotService : BackgroundService, IDiscordBotService
     {
         _client = new DiscordSocketClient();
         _token = config["Discord:Token"] ?? "";
-        
+        _client.Log += LogDiscord;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -25,6 +25,11 @@ public class DiscordBotService : BackgroundService, IDiscordBotService
     }
 
 
+
+    private Task LogDiscord(LogMessage arg) {
+        Log(arg.Message, arg.Exception);
+        return Task.CompletedTask;
+    }
 
     private static void Log(object? message, params object[]? messages)
     {
