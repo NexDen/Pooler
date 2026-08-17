@@ -60,7 +60,20 @@ public class BanchoLobbyService : IBanchoLobbyService
 
         }
 
+
+        Players = targetPlayers;
         
+
+        var playerCount = Players.Count;
+        var mapCount = MathF.Ceiling(playerCount/2) - 1;
+        if (playerCount >= 10){
+            mapCount -= 1;
+        }
+        if (Players.Any(p => p.CurrentRole == Role.Thrower)){
+            mapCount -= 1; // to be filled by the thrower map
+        }
+    
+           
         
         // poolers create the pool
         

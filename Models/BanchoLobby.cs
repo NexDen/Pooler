@@ -14,7 +14,10 @@ public class BanchoLobby
     public bool IsReady { get; set; }
     public bool IsFinished { get; set; }
     public LobbyStatus LobbyStatus { get; set; }
-    
+ 
+    public ulong? LobbyDiscordGuildId { get; set; }
+    public ulong? LobbyDiscordChannelId { get; set; }
+
     // signal to the game loop that the lobby is ready
     [NotMapped] 
     public TaskCompletionSource<bool>? ReadySignal { get; set; }
