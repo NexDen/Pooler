@@ -28,8 +28,16 @@ namespace PoolerBotCS.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AssignedMatchId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<Guid?>("CurrentMapId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("IrcMatchId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -40,12 +48,14 @@ namespace PoolerBotCS.Migrations
                     b.Property<bool>("IsReady")
                         .HasColumnType("boolean");
 
+                    b.Property<decimal?>("LobbyDiscordChannelId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<decimal?>("LobbyDiscordGuildId")
+                        .HasColumnType("numeric(20,0)");
+
                     b.Property<int>("LobbyStatus")
                         .HasColumnType("integer");
-
-                    b.Property<string>("MatchId")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -60,16 +70,27 @@ namespace PoolerBotCS.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ActiveVerificationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("DiscordUserId")
+                        .HasColumnType("numeric(20,0)");
+
                     b.Property<string>("Discriminator")
                         .IsRequired()
                         .HasMaxLength(13)
                         .HasColumnType("character varying(13)");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ActiveVerificationId");
 
                     b.ToTable("BanchoPlayers");
 
@@ -104,6 +125,26 @@ namespace PoolerBotCS.Migrations
                     b.ToTable("PoolerMaps");
                 });
 
+            modelBuilder.Entity("PoolerBotCS.Models.Verification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Code")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("DiscordUserId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Verifications");
+                });
+
             modelBuilder.Entity("PoolerBotCS.Models.PoolerPlayer", b =>
                 {
                     b.HasBaseType("PoolerBotCS.Models.BanchoPlayer");
@@ -132,6 +173,15 @@ namespace PoolerBotCS.Migrations
                         .HasForeignKey("CurrentMapId");
 
                     b.Navigation("CurrentMap");
+                });
+
+            modelBuilder.Entity("PoolerBotCS.Models.BanchoPlayer", b =>
+                {
+                    b.HasOne("PoolerBotCS.Models.Verification", "ActiveVerification")
+                        .WithMany()
+                        .HasForeignKey("ActiveVerificationId");
+
+                    b.Navigation("ActiveVerification");
                 });
 
             modelBuilder.Entity("PoolerBotCS.Models.PoolerMap", b =>

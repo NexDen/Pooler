@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
+using System.Reflection;
 using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
 
 namespace PoolerBotCS.Services;
@@ -9,11 +11,19 @@ public class DiscordBotService : BackgroundService, IDiscordBotService
     private readonly DiscordSocketClient _client;
     private readonly string _token;
 
+    private readonly InteractionService _interactions;
+    private readonly IServiceProvider _services;
+
+    private readonly IConfiguration _config;
+
     // keyed by discord user id, completed when that user's next DM arrives
     private readonly ConcurrentDictionary<ulong, TaskCompletionSource<string>> _pendingReplies = new();
 
-    public DiscordBotService(IConfiguration config)
+    public DiscordBotService(IConfiguration config, IServiceProvider services)
     {
+        _config = config;
+        _services = services;
+
         _client = new DiscordSocketClient(new DiscordSocketConfig
         {
             GatewayIntents = GatewayIntents.Guilds
@@ -24,6 +34,32 @@ public class DiscordBotService : BackgroundService, IDiscordBotService
         _token = config["Discord:Token"] ?? "";
         _client.Log += LogDiscord;
         _client.MessageReceived += OnMessageReceived;
+
+        _interactions = new InteractionService(_client.Rest);
+
+        _client.Ready += OnReady;
+        _client.InteractionCreated += OnInteractionCreated;
+
+    }
+
+
+    private async Task OnReady()
+    {
+        await _interactions.AddModulesAsync(Assembly.GetEntryAssembly(),
+            _services);
+
+        var guildId = ulong.Parse(_config["Discord:GuildId"] ?? "0");
+        if (guildId != 0)
+            await _interactions.RegisterCommandsToGuildAsync(guildId);
+        else
+            await _interactions.RegisterCommandsGloballyAsync(); // not instant, takes too long
+                                                                 // would probably not be used anyway
+    }
+
+    private async Task OnInteractionCreated(SocketInteraction interaction)
+    {
+        var ctx = new SocketInteractionContext(_client, interaction);
+        await _interactions.ExecuteCommandAsync(ctx, _services);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

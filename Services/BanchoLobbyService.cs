@@ -73,7 +73,7 @@ public class BanchoLobbyService : IBanchoLobbyService
             mapCount -= 1; // to be filled by the thrower map
         }
     
-           
+                  
         
         // poolers create the pool
         

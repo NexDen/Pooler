@@ -28,6 +28,8 @@ public class IrcBotService : BackgroundService, IIrcBotService
     private TaskCompletionSource<string>? _pendingLobbyJoin;
     private readonly object _pendingLobbyJoinLock = new();
 
+    private readonly IConfiguration _config;
+
     public IrcBotService(IConfiguration config, IServiceProvider serviceProvider)
     {
         _host        = config["Irc:Host"] ?? "";
@@ -39,6 +41,7 @@ public class IrcBotService : BackgroundService, IIrcBotService
         _baseChannel = "#osu";
         client = new TcpClient();
         _serviceProvider = serviceProvider;
+        _config = config;
     }
 
     protected override async Task<Task> ExecuteAsync(CancellationToken stoppingToken)
@@ -127,7 +130,9 @@ public class IrcBotService : BackgroundService, IIrcBotService
                     {
                         DispatchBanchoBotMessage(channelId, message);
                     }
-
+                    if (message.Parameters[1] == _config["Irc:Username"]) {
+                        TryParseVerificationMessage(message);
+                    }
                     break;
             }
             
@@ -210,6 +215,20 @@ public class IrcBotService : BackgroundService, IIrcBotService
                 _pendingLobbyJoin = null;
             }
         }
+    }
+
+    private void TryParseVerificationMessage(IRCMessage message) {
+        var sender = message.Username;
+        Log(message.Parameters[2].TrimStart(':'));
+        var isNumber = int.TryParse(message.Parameters[2].TrimStart(':'), out var code);
+        if (!isNumber) return;
+        if (100000 <= code && code <= 999999) return;
+        Log($"Verification code received from {sender}: {code}");
+        using var scope = _serviceProvider.CreateScope();
+        var banchoPlayerService = scope.ServiceProvider.GetRequiredService<IBanchoPlayerService>();
+        var result = banchoPlayerService.TryVerifyPlayer(sender, code);
+        if (result) Log($"{sender} was verified by the bot.");
+        else Log($"{sender} was not verified by the bot.");
     }
 
     private void DispatchBanchoBotMessage(string channel, IRCMessage message)

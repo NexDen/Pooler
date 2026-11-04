@@ -17,7 +17,6 @@ builder.Services.AddSingleton<IBanchoPlayerService, BanchoPlayerService>();
 builder.Services.AddDbContext<PoolerDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
 var app = builder.Build();
 
 app.MapGet("/", () => "Hello World!");

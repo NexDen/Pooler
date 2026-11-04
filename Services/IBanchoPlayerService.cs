@@ -4,5 +4,6 @@ namespace PoolerBotCS.Services;
 
 public interface IBanchoPlayerService
 {
-    public PoolerPlayer GetOrCreatePlayerByName(string playerName);
+    public BanchoPlayer GetOrCreatePlayerByName(string playerName);
+    public bool TryVerifyPlayer(string playerName, int verificationCode);
 }
